@@ -1,0 +1,11 @@
+{
+	"name": "extension-iap",
+	"url": "http://www.openfl.org",
+	"license": "MIT",
+	"tags": ["iap","openfl","purchase"],
+	"description": "In-app purchase support",
+	"version": "1.2.2",
+	"releasenote": "Fix compilation for OpenFL 4+ on iOS",
+	"contributors": [ "singmajesty", "fbricker" ],
+	"dependencies": {}
+}
