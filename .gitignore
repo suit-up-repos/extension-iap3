@@ -1,11 +1,7 @@
 .DS_Store
-//ndll/*/*.a
-//ndll/*/*.so
-//ndll/*/*.ndll
-//ndll/*/*.hash
+**.DS_Store
 project/obj/*
 *.zip
 *.hxproj
 sample/_material/*
 sample/bin
-.DS_Store
