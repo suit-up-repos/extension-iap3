@@ -71,6 +71,12 @@ public class InAppPurchase extends Extension {
 			Log.d(TAG, "onPurchasesUpdated: " + result);
 			if (result.getResponseCode() == BillingResponseCode.OK)
 			{
+				// for subscriptions, this list is empty
+				if (purchaseList.size() == 0)
+				{
+					// create faked subscription data (try with empty signature)
+					fireCallback("onPurchase", new Object[]{ "\"Poptropica Subscription\"", "", "" });
+				}
 				for (Purchase purchase : purchaseList) 
 				{
 					if(purchase.getPurchaseState() == PurchaseState.PURCHASED) {

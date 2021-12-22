@@ -5,3 +5,4 @@ project/obj/*
 *.hxproj
 sample/_material/*
 sample/bin
+.DS_Store

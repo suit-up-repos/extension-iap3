@@ -129,9 +129,14 @@ public class BillingManager implements PurchasesUpdatedListener {
     public void onPurchasesUpdated(BillingResult result, List<Purchase> purchases) {
         if (result.getResponseCode() == BillingResponseCode.OK) {
             mPurchases.clear();
-            for (Purchase purchase : purchases) {
-                handlePurchase(purchase);
-            }
+		if (purchases != null) {
+            		for (Purchase purchase : purchases) {
+                		handlePurchase(purchase);
+			}
+		} else {
+			// assume these are subscriptions
+			Log.w(TAG, "onPurchasesUpdated() purchases are null");
+		}
             mBillingUpdatesListener.onPurchasesUpdated(mPurchases, result);
         } else {
             Log.w(TAG, "onPurchasesUpdated() mPurchases: " + purchases);
