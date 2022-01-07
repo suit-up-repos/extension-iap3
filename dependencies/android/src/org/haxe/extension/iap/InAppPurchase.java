@@ -74,6 +74,7 @@ public class InAppPurchase extends Extension {
 				// for subscriptions, this list is empty
 				if (purchaseList.size() == 0)
 				{
+                    Log.w(TAG, "onPurchasesUpdated: purchases are empty");
 					// create faked subscription data (try with empty signature)
 					fireCallback("onPurchase", new Object[]{ "\"Poptropica Subscription\"", "", "" });
 				}
