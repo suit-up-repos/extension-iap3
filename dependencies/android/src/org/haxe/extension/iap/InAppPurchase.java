@@ -209,7 +209,8 @@ public class InAppPurchase extends Extension {
 	}
 
 	public static void querySkuDetails(String[] ids) {
-		InAppPurchase.billingManager.querySkuDetailsAsync(SkuType.INAPP, Arrays.asList(ids));
+		// RLH: changed IAP to SUBS
+		InAppPurchase.billingManager.querySkuDetailsAsync(SkuType.SUBS, Arrays.asList(ids));
 	}
 	
 	public static String getPublicKey () {
