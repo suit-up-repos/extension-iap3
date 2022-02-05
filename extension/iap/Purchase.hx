@@ -31,8 +31,7 @@ class Purchase
 	public var metadata : String;
 	public var purchase_id : String;
 	
-	public function new(baseObj:Dynamic, ?itemType:String, ?signature:String) 
-	{
+	public function new(baseObj:Dynamic, ?itemType:String, ?signature:String) {
 
 		if (baseObj==null) {
 			return;
@@ -41,11 +40,10 @@ class Purchase
 		var originalJson:String = "";
 		var dynObj:Dynamic = null;
 		
-		if (Std.is(baseObj, String)) {
+		if (Std.isOfType(baseObj, String)) {
 			originalJson = cast (baseObj, String);
 			dynObj = Json.parse(originalJson);
-		}
-		else {
+		} else {
 			dynObj = baseObj;
 			originalJson = Json.stringify(dynObj);
 		}
