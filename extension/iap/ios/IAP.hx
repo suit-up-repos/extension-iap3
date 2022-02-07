@@ -136,9 +136,9 @@ import haxe.Json;
 
 		tempProductsData.splice(0, tempProductsData.length);
 
-		if (Std.is(inArg, String))
+		if (Std.isOfType(inArg, String))
 			purchases_get_data (cast(inArg, String));
-		else if (Std.is(inArg, Array))
+		else if (Std.isOfType(inArg, Array))
 			purchases_get_data (cast(inArg, Array<Dynamic>).join(","));
 		else
 			throw new flash.errors.Error("Invalid parameter type: " + Type.typeof(inArg) + ". Valid types are String and Array<String>.");
