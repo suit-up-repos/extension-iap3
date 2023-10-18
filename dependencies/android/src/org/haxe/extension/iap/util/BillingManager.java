@@ -387,39 +387,25 @@ public class BillingManager implements PurchasesUpdatedListener {
      * a listener
      */
     public void queryPurchases() {
+        Log.d("BILLING  Starting setup.");
         Runnable queryToExecute = new Runnable() {
             @Override
             public void run() {
                 long time = System.currentTimeMillis();
-                PurchasesResult purchasesResult = mBillingClient.queryPurchases(SkuType.INAPP);
-                Log.i(TAG, "Querying purchases elapsed time: " + (System.currentTimeMillis() - time)
-                        + "ms");
-                Log.i(TAG, "purchasesResult:" + purchasesResult);
-                /*
-                // If there are subscriptions supported, we add subscription rows as well
-                if (areSubscriptionsSupported()) {
-                    PurchasesResult subscriptionResult
-                            = mBillingClient.queryPurchases(SkuType.SUBS);
-                    Log.i(TAG, "Querying purchases and subscriptions elapsed time: "
-                            + (System.currentTimeMillis() - time) + "ms");
-                    Log.i(TAG, "Querying subscriptions result code: "
-                            + subscriptionResult.getResponseCode()
-                            + " res: " + subscriptionResult.getPurchasesList().size());
+                Log.i("BILLING Querying purchases elapsed time: " + (System.currentTimeMillis() - time) + "ms");
 
-                    if (subscriptionResult.getResponseCode() == BillingResponse.OK) {
-                        purchasesResult.getPurchasesList().addAll(
-                                subscriptionResult.getPurchasesList());
-                    } else {
-                        Log.e(TAG, "Got an error response trying to query subscription purchases");
-                    }
-                } else if (purchasesResult.getResponseCode() == BillingResponse.OK) {
-                    Log.i(TAG, "Skipped subscription purchases query since they are not supported");
-                } else {
-                    Log.w(TAG, "queryPurchases() got an error response code: "
-                            + purchasesResult.getResponseCode());
-                }
-                */
-                onQueryPurchasesFinished(purchasesResult);
+                mBillingClient.queryPurchasesAsync(
+                        QueryPurchasesParams.newBuilder()
+                                .setProductType("inapp")
+                                .build(),
+
+                        new PurchasesResponseListener() {
+                            @Override
+                            public void onQueryPurchasesResponse(BillingResult billingResult,
+                                                                 List<Purchase> purchaseList) {
+                                onQueryPurchasesFinished(purchaseList);
+                            }
+                        });
             }
         };
 
