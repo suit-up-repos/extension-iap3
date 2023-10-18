@@ -174,21 +174,6 @@ import haxe.Json;
 	}
 
 	/**
-	 * Sends a acknowledgePurchase intent for a given product.
-	 *
-	 * @param purchase. The previously purchased product.
-	 *
-	 * Related Events (IAPEvent):
-	 * 		PURCHASE_ACKNOWLEDGE_SUCCESS: Fired when the acknowledgePurchase attempt was successful
-	 * 		PURCHASE_ACKNOWLEDGE_FAILURE: Fired when the acknowledgePurchase attempt failed
-	 */
-
-	 public static function acknowledgePurchase (purchase:Purchase):Void {
-
-		//TODO
-	}
-
-	/**
 	 * Manually finishes a transaction from the SKPaymentQueue. If <code>manualTransactionMode</code> is false,
 	 * this method will no-op.
 	 *
@@ -229,6 +214,7 @@ import haxe.Json;
 		var type = Std.string (Reflect.field (inEvent, "type"));
 		var data = Std.string (Reflect.field (inEvent, "data"));
 
+		trace('--------------------------- iap event: ' + type);
 
 		switch (type) {
 
@@ -246,9 +232,8 @@ import haxe.Json;
 				dispatchEvent (evt);
 
 			case "failed":
-				var event = new IAPEvent (IAPEvent.PURCHASE_FAILURE);
-				event.message = data;
-				dispatchEvent (event);
+
+				dispatchEvent (new IAPEvent (IAPEvent.PURCHASE_FAILURE, data));
 
 			case "cancel":
 
@@ -282,8 +267,8 @@ import haxe.Json;
 				dispatchEvent (e);
 
 			case "productData":
-				var price = Reflect.field(inEvent, "priceAmountMicros");
-				var prod:IAProduct = { productID: Reflect.field (inEvent, "productID"), localizedTitle: Reflect.field (inEvent, "localizedTitle"), localizedDescription: Reflect.field (inEvent, "localizedDescription"), localizedPrice: Reflect.field (inEvent, "localizedPrice"), priceAmountMicros: price * 10000, price: price / 100, priceCurrencyCode: Reflect.field (inEvent, "priceCurrencyCode")};
+				var prod:IAProduct = { productID: Reflect.field (inEvent, "productID"), localizedTitle: Reflect.field (inEvent, "localizedTitle"), localizedDescription: Reflect.field (inEvent, "localizedDescription"), localizedPrice: Reflect.field (inEvent, "localizedPrice"), priceAmountMicros: Reflect.field (inEvent, "priceAmountMicros"), price: Reflect.field(inEvent, "priceAmountMicros")/1000/1000, priceCurrencyCode: Reflect.field (inEvent, "priceCurrencyCode")};
+				trace('iOS Product: ' + prod);
 				tempProductsData.push( prod );
 				inventory.productDetailsMap.set(prod.productID, new ProductDetails(prod));
 
@@ -293,9 +278,8 @@ import haxe.Json;
 				tempProductsData.splice(0, tempProductsData.length);
 
 			case "productDataFailed":
-				var event = new IAPEvent (IAPEvent.PURCHASE_PRODUCT_DATA_FAILED);
-				event.message = data;
-				dispatchEvent (event);
+
+				dispatchEvent (new IAPEvent (IAPEvent.PURCHASE_PRODUCT_DATA_FAILED, data));
 
 			default:
 

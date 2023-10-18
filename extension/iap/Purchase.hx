@@ -14,7 +14,6 @@ class Purchase
 	public var purchaseState(default, null):Int;
 	public var developerPayload(default, null):String;
 	public var purchaseToken(default, null):String;
-	public var acknowledged(default, null):Bool;
 	public var signature(default, null):String;
 	public var originalJson(default, null):String;
 	public var json(default, null):String;
@@ -58,7 +57,6 @@ class Purchase
 		purchaseState = Reflect.field(dynObj, "purchaseState");
 		developerPayload = Reflect.field(dynObj, "developerPayload");
 		purchaseToken = Reflect.field(dynObj, "purchaseToken");
-		acknowledged = Reflect.field(dynObj, "acknowledged");
 		
 		this.signature = signature;
 		this.itemType = itemType;
