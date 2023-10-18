@@ -7,7 +7,11 @@ import flash.events.EventDispatcher;
 import flash.Lib;
 import haxe.Json;
 
+#if (openfl < "4.0.0")
 import openfl.utils.JNI;
+#else
+import lime.system.JNI;
+#end
 
 /**
  * Provides convenience methods and properties for in-app purchases (Android & iOS).
@@ -164,6 +168,25 @@ import openfl.utils.JNI;
 
 	}
 
+	/**
+	 * Sends a acknowledgePurchase intent for a given product.
+	 *
+	 * @param purchase. The previously purchased product.
+	 *
+	 * Related Events (IAPEvent):
+	 * 		PURCHASE_ACKNOWLEDGE_SUCCESS: Fired when the acknowledgePurchase attempt was successful
+	 * 		PURCHASE_ACKNOWLEDGE_FAILURE: Fired when the acknowledgePurchase attempt failed
+	 */
+
+	public static function acknowledgePurchase (purchase:Purchase):Void {
+
+		if (funcAcknowledgePurchase == null) {
+			funcAcknowledgePurchase = JNI.createStaticMethod ("org/haxe/extension/iap/InAppPurchase", "acknowledgePurchase", "(Ljava/lang/String;Ljava/lang/String;)V");
+		}
+		funcAcknowledgePurchase (purchase.originalJson, purchase.signature);
+
+	}
+
 	public static function queryInventory (queryItemDetails:Bool = false, moreItems:Array<String> = null):Void {}
 
 	// Getter & Setter Methods
@@ -202,9 +225,12 @@ import openfl.utils.JNI;
 	}
 
 	public static function dispatchEvent (event:Event):Bool {
+		// fix for runinig callback from extension in proper gui thread
+		haxe.Timer.delay(function() {
+			dispatcher.dispatchEvent (event);
+		}, 0);
 
-		return dispatcher.dispatchEvent (event);
-
+		return true;
 	}
 
 	public static function hasEventListener (type:String):Bool {
@@ -213,10 +239,12 @@ import openfl.utils.JNI;
 
 	}
 
+
 	// Native Methods
 	private static var funcInit:Dynamic;
 	private static var funcBuy:Dynamic;
 	private static var funcConsume:Dynamic;
+	private static var funcAcknowledgePurchase:Dynamic;
 	private static var funcRestore:Dynamic;
 	private static var funcQueryInventory:Dynamic;
 	private static var funcQuerySkuDetails:Dynamic;
@@ -250,7 +278,7 @@ private class IAPHandler {
 		var evt:IAPEvent = new IAPEvent (IAPEvent.PURCHASE_CONSUME_FAILURE);
 		evt.productID = Reflect.field(Reflect.field(dynResp, "product"), "productId");
 		evt.message = Reflect.field(Reflect.field(dynResp, "result"), "message");
-		IAP.dispatcher.dispatchEvent (evt);
+		IAP.dispatchEvent (evt);
 	}
 
 	///////////////////////////////////////////////////////////////////////////////////////////
@@ -262,7 +290,30 @@ private class IAPHandler {
 		var dynResp:Dynamic = Json.parse(response);
 		var evt:IAPEvent = new IAPEvent (IAPEvent.PURCHASE_CONSUME_SUCCESS);
 		evt.productID = Reflect.field(dynResp, "productId");		
-		IAP.dispatcher.dispatchEvent(evt);
+		IAP.dispatchEvent(evt);
+	}
+
+	///////////////////////////////////////////////////////////////////////////////////////////
+	///////////////////////////////////////////////////////////////////////////////////////////
+
+	public function onFailedAcknowledgePurchase (response:String):Void {
+		var dynResp:Dynamic = Json.parse(response);
+		var evt:IAPEvent = new IAPEvent (IAPEvent.PURCHASE_ACKNOWLEDGE_FAILURE);
+		evt.productID = Reflect.field(Reflect.field(dynResp, "product"), "productId");
+		evt.message = Reflect.field(Reflect.field(dynResp, "result"), "message");
+		IAP.dispatchEvent (evt);
+	}
+
+	///////////////////////////////////////////////////////////////////////////////////////////
+	///////////////////////////////////////////////////////////////////////////////////////////
+
+	public function onAcknowledgePurchase (response:String):Void {
+		trace('onAcknowledgePurchase: $response');
+
+		var dynResp:Dynamic = Json.parse(response);
+		var evt:IAPEvent = new IAPEvent (IAPEvent.PURCHASE_ACKNOWLEDGE_SUCCESS);
+		evt.productID = Reflect.field(dynResp, "productId");		
+		IAP.dispatchEvent(evt);
 	}
 
 	///////////////////////////////////////////////////////////////////////////////////////////
@@ -273,7 +324,7 @@ private class IAPHandler {
 		var evt:IAPEvent = new IAPEvent (IAPEvent.PURCHASE_FAILURE);
 		if (Reflect.field(dynResp, "product") != null) evt.productID = Reflect.field(Reflect.field(dynResp, "product"), "productId");
 		evt.message = Reflect.field(Reflect.field(dynResp, "result"), "message");
-		IAP.dispatcher.dispatchEvent (evt);
+		IAP.dispatchEvent (evt);
 	}
 
 	///////////////////////////////////////////////////////////////////////////////////////////
@@ -286,7 +337,7 @@ private class IAPHandler {
 		evt.productID = evt.purchase.productID;
 		IAP.inventory.purchaseMap.set(evt.purchase.productID, evt.purchase);
 
-		IAP.dispatcher.dispatchEvent (evt);
+		IAP.dispatchEvent (evt);
 	}
 
 	///////////////////////////////////////////////////////////////////////////////////////////
@@ -295,7 +346,7 @@ private class IAPHandler {
 	public function onRequestProductDataComplete(response:String):Void {
 
 		if (response == "Failure") {
-			IAP.dispatcher.dispatchEvent (new IAPEvent (IAPEvent.PURCHASE_PRODUCT_DATA_FAILED));
+			IAP.dispatchEvent (new IAPEvent (IAPEvent.PURCHASE_PRODUCT_DATA_FAILED));
 
 		} else {
 
@@ -321,12 +372,12 @@ private class IAPHandler {
 				}
 			}
 
-			IAP.dispatcher.dispatchEvent (evt);
+			IAP.dispatchEvent (evt);
 		}
 	}
 
 	public function onQueryInventoryComplete(response:String):Void {
-
+		
 		var dynResp:Dynamic = Json.parse(response);
 		IAP.inventory = new Inventory(dynResp);
 	}
@@ -337,9 +388,9 @@ private class IAPHandler {
 	
 	public function onStarted (response:String):Void {
 		if (response == "Success") {
-			IAP.dispatcher.dispatchEvent (new IAPEvent (IAPEvent.PURCHASE_INIT));
+			IAP.dispatchEvent (new IAPEvent (IAPEvent.PURCHASE_INIT));
 		} else {
-			IAP.dispatcher.dispatchEvent (new IAPEvent (IAPEvent.PURCHASE_INIT_FAILED));
+			IAP.dispatchEvent (new IAPEvent (IAPEvent.PURCHASE_INIT_FAILED));
 		}
 	}
 
