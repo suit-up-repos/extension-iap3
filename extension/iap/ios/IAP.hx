@@ -3,7 +3,8 @@ package extension.iap.ios;
 import cpp.Lib;
 import extension.iap.IAP;
 import flash.errors.Error;
-import extension.iap.EventDispatcher;
+import flash.events.Event;
+import flash.events.EventDispatcher;
 import haxe.Json;
 
 /**
@@ -59,6 +60,7 @@ import haxe.Json;
 	// Event dispatcher composition
 	private static var dispatcher = new EventDispatcher ();
 
+
 	/**
 	 * Initializes the extension.
 	 *
@@ -95,7 +97,6 @@ import haxe.Json;
 
 			initialized = false;
 		}
-		dispatcher.removeAllListeners();
 	}
 
 	/**
@@ -186,10 +187,6 @@ import haxe.Json;
 
 		//TODO
 	}
-	
-	public static function queryInventory():Void {
-		// TODO
-	}
 
 	/**
 	 * Manually finishes a transaction from the SKPaymentQueue. If <code>manualTransactionMode</code> is false,
@@ -232,7 +229,6 @@ import haxe.Json;
 		var type = Std.string (Reflect.field (inEvent, "type"));
 		var data = Std.string (Reflect.field (inEvent, "data"));
 
-		trace('--------------------------- iap event: ' + type);
 
 		switch (type) {
 
@@ -243,11 +239,11 @@ import haxe.Json;
 			case "success":
 
 				var evt:IAPEvent = new IAPEvent (IAPEvent.PURCHASE_SUCCESS);
-				evt.purchase = new Purchase(inEvent, null, null, Purchase.PURCHASE_STATE_PURCHASED);
+				evt.purchase = new Purchase(inEvent);
 				evt.productID = evt.purchase.productID;
-				inventory.addPurchase(evt.purchase);
+				inventory.purchaseMap.set(evt.purchase.productID, evt.purchase);
 
-				dispatchEvent(evt);
+				dispatchEvent (evt);
 
 			case "failed":
 				var event = new IAPEvent (IAPEvent.PURCHASE_FAILURE);
@@ -287,9 +283,7 @@ import haxe.Json;
 
 			case "productData":
 				var price = Reflect.field(inEvent, "priceAmountMicros");
-				var prod:IAProduct = { productID: Reflect.field (inEvent, "productID"), localizedTitle: Reflect.field (inEvent, "localizedTitle"), localizedDescription: Reflect.field (inEvent, "localizedDescription"), localizedPrice: Reflect.field (inEvent, "localizedPrice"), priceAmountMicros: price, price: price / 1000 / 1000, priceCurrencyCode: Reflect.field (inEvent, "priceCurrencyCode")};
-				//var prod:IAProduct = { productID: Reflect.field (inEvent, "productID"), localizedTitle: Reflect.field (inEvent, "localizedTitle"), localizedDescription: Reflect.field (inEvent, "localizedDescription"), localizedPrice: Reflect.field (inEvent, "localizedPrice"), priceAmountMicros: price * 10000, price: price / 100, priceCurrencyCode: Reflect.field (inEvent, "priceCurrencyCode")};
-				trace('iOS Product: ' + prod);
+				var prod:IAProduct = { productID: Reflect.field (inEvent, "productID"), localizedTitle: Reflect.field (inEvent, "localizedTitle"), localizedDescription: Reflect.field (inEvent, "localizedDescription"), localizedPrice: Reflect.field (inEvent, "localizedPrice"), priceAmountMicros: price * 10000, price: price / 100, priceCurrencyCode: Reflect.field (inEvent, "priceCurrencyCode")};
 				tempProductsData.push( prod );
 				inventory.productDetailsMap.set(prod.productID, new ProductDetails(prod));
 
@@ -338,21 +332,29 @@ import haxe.Json;
 
 	// Event Dispatcher composition methods
 
-	public static function addEventListener (type:String, listener:IAPEvent->Void):Void {
+	public static function addEventListener (type:String, listener:Dynamic, useCapture:Bool = false, priority:Int = 0, useWeakReference:Bool = false):Void {
 
-		dispatcher.setListener(type, listener);
-	}
-
-	public static function removeEventListener (type:String):Void {
-
-		dispatcher.removeListener(type);
+		dispatcher.addEventListener (type, listener, useCapture, priority, useWeakReference);
 
 	}
 
-	public static function dispatchEvent (event:IAPEvent):Void {
-		dispatcher.dispatchEvent(event);
+	public static function removeEventListener (type:String, listener:Dynamic, capture:Bool = false):Void {
+
+		dispatcher.removeEventListener (type, listener, capture);
+
 	}
 
+	public static function dispatchEvent (event:Event):Bool {
+
+		return dispatcher.dispatchEvent (event);
+
+	}
+
+	public static function hasEventListener (type:String):Bool {
+
+		return dispatcher.hasEventListener (type);
+
+	}
 
 	// Native Methods
 
