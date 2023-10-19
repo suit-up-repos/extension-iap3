@@ -33,8 +33,9 @@ import com.android.billingclient.api.BillingResult;
 import com.android.billingclient.api.ConsumeParams;
 import com.android.billingclient.api.ConsumeResponseListener;
 import com.android.billingclient.api.Purchase;
-import com.android.billingclient.api.Purchase.PurchasesResult;
 import com.android.billingclient.api.PurchasesUpdatedListener;
+import com.android.billingclient.api.PurchasesResponseListener;
+import com.android.billingclient.api.QueryPurchasesParams;
 import com.android.billingclient.api.SkuDetails;
 import com.android.billingclient.api.SkuDetailsParams;
 import com.android.billingclient.api.SkuDetailsResponseListener;
@@ -344,26 +345,16 @@ public class BillingManager implements PurchasesUpdatedListener {
             Log.i(TAG, "Got a purchase: " + purchase + "; but signature is bad. Skipping...");
             return;
         }
-
         Log.d(TAG, "Got a verified purchase: " + purchase);
-
         mPurchases.add(purchase);
     }
 
     /**
      * Handle a result from querying of purchases and report an updated list to the listener
      */
-    private void onQueryPurchasesFinished(PurchasesResult result) {
-        // Have we been disposed of in the meantime? If so, or bad result code, then quit
-        if (mBillingClient == null || result.getResponseCode() != BillingResponseCode.OK) {
-            Log.w(TAG, "Billing client was null or result code (" + result.getResponseCode()
-                    + ") was bad - quitting");
-            mBillingUpdatesListener.onBillingClientSetupFinished(false);
-            return;
-        }
-
+    private void onQueryPurchasesFinished(List<Purchase> result) {
         Log.d(TAG, "Query inventory was successful.");
-        mBillingUpdatesListener.onQueryPurchasesFinished(result.getPurchasesList());
+        mBillingUpdatesListener.onQueryPurchasesFinished(result);
         mBillingUpdatesListener.onBillingClientSetupFinished(true);
     }
 
@@ -387,12 +378,12 @@ public class BillingManager implements PurchasesUpdatedListener {
      * a listener
      */
     public void queryPurchases() {
-        Log.d("BILLING  Starting setup.");
+        Log.d(TAG, "Starting setup.");
         Runnable queryToExecute = new Runnable() {
             @Override
             public void run() {
                 long time = System.currentTimeMillis();
-                Log.i("BILLING Querying purchases elapsed time: " + (System.currentTimeMillis() - time) + "ms");
+                Log.d(TAG, "Querying purchases elapsed time: " + (System.currentTimeMillis() - time) + "ms");
 
                 mBillingClient.queryPurchasesAsync(
                         QueryPurchasesParams.newBuilder()
@@ -400,9 +391,8 @@ public class BillingManager implements PurchasesUpdatedListener {
                                 .build(),
 
                         new PurchasesResponseListener() {
-                            @Override
-                            public void onQueryPurchasesResponse(BillingResult billingResult,
-                                                                 List<Purchase> purchaseList) {
+                            //@Override
+                            public void onQueryPurchasesResponse(BillingResult billingResult, List<Purchase> purchaseList) {
                                 onQueryPurchasesFinished(purchaseList);
                             }
                         });
